@@ -4,9 +4,13 @@
 function buildOfframpUrl(): string {
   const p = new URLSearchParams();
 
-  // _ctkn doit être valide pour securepay.akuunda-pay.io (whitelist chez Mt Pelerin)
-  const token = (process.env as any)?.MTP_TOKEN || "";
-  if (!token) console.warn("[MTP] _ctkn manquant. Renseigne process.env.MTP_TOKEN au build.");
+  // Token : on accepte MT_PELERIN_TOKEN (préféré) ou MTP_TOKEN
+  const token =
+    (process.env as any)?.MT_PELERIN_TOKEN ||
+    (process.env as any)?.MTP_TOKEN ||
+    "";
+
+  if (!token) console.warn("[MTP] _ctkn manquant. Définis MT_PELERIN_TOKEN (ou MTP_TOKEN) au build.");
   p.set("_ctkn", token);
 
   // Forcer la vue Off-ramp
@@ -20,7 +24,12 @@ function buildOfframpUrl(): string {
   p.set("net", "matic_mainnet");  // USDC sur Polygon
   p.set("ssa", "100");            // montant par défaut (modifiable dans l’UI)
 
-  return `https://widget.mtpelerin.com/?${p.toString()}`;
+  // Base URL du widget (optionnelle, par défaut officielle)
+  const base =
+    ((process.env as any)?.MT_PELERIN_URL as string) ||
+    "https://widget.mtpelerin.com";
+
+  return `${base}/?${p.toString()}`;
 }
 
 function mountWidget(iframeId = "mtpel-iframe") {
