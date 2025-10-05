@@ -1,30 +1,25 @@
-// OFF-RAMP minimal : SELL (USDC -> EUR) sur Polygon, sans paramètres cosmétiques
-// ni "addr/code/hash" pour éviter les écrans blancs et crashes du widget.
+// OFF-RAMP minimal : SELL (USDC -> EUR) sur Polygon
+// Variante SANS _ctkn pour éviter que le widget charge le module "personal/payment"
+// (qui provoquait l'erreur .map sur p[k] === undefined).
 
 function buildOfframpUrl(): string {
   const p = new URLSearchParams();
 
-  // Token : on accepte MT_PELERIN_TOKEN (préféré) ou MTP_TOKEN
-  const token =
-    (process.env as any)?.MT_PELERIN_TOKEN ||
-    (process.env as any)?.MTP_TOKEN ||
-    "";
+  // ❌ Pas de token (_ctkn) ici pour rester en mode public/quote
+  // p.set("_ctkn", token);
 
-  if (!token) console.warn("[MTP] _ctkn manquant. Définis MT_PELERIN_TOKEN (ou MTP_TOKEN) au build.");
-  p.set("_ctkn", token);
-
-  // Forcer la vue Off-ramp
+  // Forcer l'off-ramp
   p.set("tab", "sell");
   p.set("tabs", "sell");
 
-  // Langue / Devises
+  // Langue / Devises / Réseau / Montant par défaut
   p.set("lang", "auto");
   p.set("ssc", "USDC");           // crypto source
   p.set("sdc", "EUR");            // fiat cible
   p.set("net", "matic_mainnet");  // USDC sur Polygon
   p.set("ssa", "100");            // montant par défaut (modifiable dans l’UI)
 
-  // Base URL du widget (optionnelle, par défaut officielle)
+  // Base URL du widget (env optionnelle, sinon valeur officielle)
   const base =
     ((process.env as any)?.MT_PELERIN_URL as string) ||
     "https://widget.mtpelerin.com";
@@ -43,21 +38,21 @@ function mountWidget(iframeId = "mtpel-iframe") {
   console.log("[MTP] URL:", url);
   iframe.src = url;
 
-  // Watchdog (reload une fois si le widget reste vide)
+  // Watchdog : si le widget reste vide, on recharge une fois (cache-bust)
   const watchdog = setTimeout(() => {
     try {
       const u = new URL(iframe.src);
       u.searchParams.set("ts", String(Date.now()));
       iframe.src = u.toString();
       console.debug("[MTP] Reload iframe (watchdog)");
-    } catch {}
+    } catch { /* noop */ }
   }, 15000);
 
   iframe.addEventListener("load", () => clearTimeout(watchdog));
 }
 
 function initApp() {
-  console.log("🚀 Initialisation Off-ramp...");
+  console.log("🚀 Initialisation Off-ramp (sans _ctkn)...");
   mountWidget();
 }
 
