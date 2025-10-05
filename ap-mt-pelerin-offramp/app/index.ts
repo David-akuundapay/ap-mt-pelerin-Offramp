@@ -1,14 +1,22 @@
 // OFF-RAMP minimal : SELL (USDC -> EUR) sur Polygon
-// Variante SANS _ctkn pour éviter que le widget charge le module "personal/payment"
-// (qui provoquait l'erreur .map sur p[k] === undefined).
+// Version AVEC _ctkn (nécessaire si Mt Pelerin impose l'origine signée)
 
 function buildOfframpUrl(): string {
   const p = new URLSearchParams();
 
-  // ❌ Pas de token (_ctkn) ici pour rester en mode public/quote
-  // p.set("_ctkn", token);
+  // Token : MT_PELERIN_TOKEN (ou MTP_TOKEN en fallback)
+  const token =
+    (process.env as any)?.MT_PELERIN_TOKEN ||
+    (process.env as any)?.MTP_TOKEN ||
+    "";
 
-  // Forcer l'off-ramp
+  if (!token) {
+    console.warn("[MTP] _ctkn manquant. Définis MT_PELERIN_TOKEN (ou MTP_TOKEN) au build.");
+  } else {
+    p.set("_ctkn", token);
+  }
+
+  // Forcer l'off-ramp SELL
   p.set("tab", "sell");
   p.set("tabs", "sell");
 
@@ -17,9 +25,10 @@ function buildOfframpUrl(): string {
   p.set("ssc", "USDC");           // crypto source
   p.set("sdc", "EUR");            // fiat cible
   p.set("net", "matic_mainnet");  // USDC sur Polygon
-  p.set("ssa", "100");            // montant par défaut (modifiable dans l’UI)
+  p.set("ssa", "100");            // montant par défaut
 
-  // Base URL du widget (env optionnelle, sinon valeur officielle)
+  // PAS de paramètres cosmétiques ou sensibles (logo, couleurs, addr, code, hash, type, snet)
+
   const base =
     ((process.env as any)?.MT_PELERIN_URL as string) ||
     "https://widget.mtpelerin.com";
@@ -52,7 +61,7 @@ function mountWidget(iframeId = "mtpel-iframe") {
 }
 
 function initApp() {
-  console.log("🚀 Initialisation Off-ramp (sans _ctkn)...");
+  console.log("🚀 Initialisation Off-ramp (_ctkn)...");
   mountWidget();
 }
 
