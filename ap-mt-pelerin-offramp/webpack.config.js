@@ -20,8 +20,12 @@ module.exports = {
     ]
   },
   plugins: [
+    // Expose les env au bundle — prend MT_PELERIN_TOKEN/URL en priorité
     new webpack.DefinePlugin({
-      "process.env.MTP_TOKEN": JSON.stringify(process.env.MTP_TOKEN || "")
+      "process.env.MTP_TOKEN": JSON.stringify(process.env.MT_PELERIN_TOKEN || process.env.MTP_TOKEN || ""),
+      "process.env.MT_PELERIN_TOKEN": JSON.stringify(process.env.MT_PELERIN_TOKEN || ""),
+      "process.env.MT_PELERIN_URL": JSON.stringify(process.env.MT_PELERIN_URL || "https://widget.mtpelerin.com"),
+      "process.env.BASE_URL": JSON.stringify(process.env.BASE_URL || "")
     }),
     new HtmlWebpackPlugin({
       template: path.resolve(__dirname, "public/index.html"),
